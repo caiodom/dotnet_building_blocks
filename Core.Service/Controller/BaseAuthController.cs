@@ -44,8 +44,8 @@ namespace Core.Service.Controller
         }
 
 
-        [HttpPost("nova-conta")]
-        public async Task<ActionResult> Registrar(RegisterUserViewModel registerUser)
+        [HttpPost("register")]
+        public async Task<ActionResult> Register(RegisterUserViewModel registerUser)
         {
             if (!ModelState.IsValid) return CustomResponse(ModelState);
 
@@ -61,7 +61,7 @@ namespace Core.Service.Controller
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, false);
-                return CustomResponse(await GerarJwt(user.Email));
+                return CustomResponse(await GenerateJWT(user.Email));
             }
 
             foreach (var error in result.Errors)
@@ -72,7 +72,7 @@ namespace Core.Service.Controller
             return CustomResponse(registerUser);
         }
        
-        [HttpPost("entrar")]
+        [HttpPost("login")]
         public async Task<ActionResult> Login(LoginUserViewModel loginUser)
         {
             if (!ModelState.IsValid)
@@ -83,7 +83,7 @@ namespace Core.Service.Controller
             if (result.Succeeded)
             {
                 _logger.LogInformation("Usuario " + loginUser.Email + " logado com sucesso");
-                return CustomResponse(await GerarJwt(loginUser.Email));
+                return CustomResponse(await GenerateJWT(loginUser.Email));
             }
 
             if (result.IsLockedOut)
@@ -96,7 +96,7 @@ namespace Core.Service.Controller
             return CustomResponse(loginUser);
         }
 
-        private async Task<LoginResponseViewModel> GerarJwt(string email)
+        private async Task<LoginResponseViewModel> GenerateJWT(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
             var claims = await _userManager.GetClaimsAsync(user);
