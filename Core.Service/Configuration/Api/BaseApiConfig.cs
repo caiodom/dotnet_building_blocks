@@ -4,10 +4,16 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Asp.Versioning;
 
 namespace Core.Service.Configuration
 {
@@ -17,20 +23,22 @@ namespace Core.Service.Configuration
         public IServiceCollection AddApiConfig(IServiceCollection services)
         {
             services.AddControllers();
-            
 
-            services.AddApiVersioning(options =>
-            {
-                options.AssumeDefaultVersionWhenUnspecified = true;
-                options.DefaultApiVersion = new ApiVersion(1, 0);
-                options.ReportApiVersions = true;
-            });
+            services.AddApiVersioning(
+               options =>
+               {
 
-            services.AddVersionedApiExplorer(options =>
-            {
-                options.GroupNameFormat = "'v'VVV";//v que é a versao VVV que são os parametros aceitados 'major,minor...'
-                options.SubstituteApiVersionInUrl = true;
-            });
+                   options.ReportApiVersions = true;
+                   options.AssumeDefaultVersionWhenUnspecified = true;
+                   options.DefaultApiVersion = new ApiVersion(1, 0);
+               })
+           .AddApiExplorer(
+               options =>
+               {
+                   options.GroupNameFormat = "'v'VVV";
+                   options.SubstituteApiVersionInUrl = true;
+               });
+
 
             services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
 
