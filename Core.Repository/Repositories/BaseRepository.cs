@@ -12,9 +12,9 @@ using System.Threading.Tasks;
 
 namespace Core.Infra.Data.Repositories
 {
-    public class BaseRepository<T>: IBaseRepository<T> where T:BaseEntity,new()
+    public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity, new()
     {
-        protected MainContext Db; 
+        protected MainContext Db;
         protected DbSet<T> DbSet;
         public BaseRepository(IConfiguration config)
         {
@@ -22,7 +22,9 @@ namespace Core.Infra.Data.Repositories
             DbSet = Db.Set<T>();
         }
 
-        public virtual async Task<IEnumerable<T>> GetAsync(bool asNoTracking=true)
+        #region >> Async <<
+
+        public virtual async Task<IEnumerable<T>> GetAsync(bool asNoTracking = true)
         {
             if (asNoTracking)
             {
@@ -33,31 +35,31 @@ namespace Core.Infra.Data.Repositories
             return await DbSet.ToListAsync();
         }
 
-        public virtual async Task<IEnumerable<T>> GetAsync(Expression<Func<T,bool>> expression,bool asNoTracking = true)
+        public virtual async Task<IEnumerable<T>> GetAsync(Expression<Func<T, bool>> expression, bool asNoTracking = true)
         {
-            if(asNoTracking)
+            if (asNoTracking)
             {
                 return await DbSet.AsNoTracking()
                                     .Where(expression)
                                     .ToListAsync();
             }
 
-            return await  DbSet.Where(expression).ToListAsync();
+            return await DbSet.Where(expression).ToListAsync();
         }
 
-        public virtual async Task<IEnumerable<T>> GetAsync( Expression<Func<T, bool>> expression, Expression<Func<T, object>> orderBy,bool asNoTracking = true)
+        public virtual async Task<IEnumerable<T>> GetAsync(Expression<Func<T, bool>> expression, Expression<Func<T, object>> orderBy, bool asNoTracking = true)
         {
 
             if (asNoTracking)
                 return await DbSet.AsNoTracking().OrderBy(orderBy).Where(expression).ToListAsync().ConfigureAwait(false);
-               
+
 
 
             return await DbSet.OrderBy(orderBy)
                                 .Where(expression)
                                 .ToListAsync()
                                 .ConfigureAwait(false);
-             
+
         }
 
         public virtual async Task<T> GetByIdAsync(int entityId, bool asNoTracking = true)
@@ -70,24 +72,17 @@ namespace Core.Infra.Data.Repositories
         public virtual async Task AddAsync(T entity)
         {
             DbSet.Add(entity);
-          
+
             await SaveChangesAsync();
         }
 
         public virtual async Task AddCollectionAsync(IEnumerable<T> entities)
         {
-             DbSet.AddRange(entities);
+            DbSet.AddRange(entities);
             await SaveChangesAsync();
         }
 
-        public virtual IEnumerable<T> AddCollectionWithProxy(IEnumerable<T> entities)
-        {
-            foreach (var entity in entities)
-            {
-                DbSet.Add(entity);
-                yield return entity;
-            }
-        }
+
 
 
         public virtual Task UpdateAsync(T entity)
@@ -129,47 +124,98 @@ namespace Core.Infra.Data.Repositories
             await Db.SaveChangesAsync().ConfigureAwait(false);
         }
 
+        #endregion
 
-
+        #region >> Not Async <<
+        public virtual IEnumerable<T> AddCollectionWithProxy(IEnumerable<T> entities)
+        {
+            foreach (var entity in entities)
+            {
+                DbSet.Add(entity);
+                yield return entity;
+            }
+        }
         public virtual IEnumerable<T> Get(bool asNoTracking = true)
         {
             if (asNoTracking)
             {
-                return  DbSet.AsNoTracking();
+                return DbSet.AsNoTracking();
             }
 
-            return  DbSet;
+            return DbSet;
         }
 
+        
         public virtual IEnumerable<T> Get(Expression<Func<T, bool>> expression, bool asNoTracking = true)
         {
             if (asNoTracking)
             {
-                return  DbSet.AsNoTracking()
+                return DbSet.AsNoTracking()
                                     .Where(expression);
             }
 
-            return  DbSet.Where(expression);
+            return DbSet.Where(expression);
         }
 
         public virtual IEnumerable<T> Get(Expression<Func<T, bool>> expression, Expression<Func<T, object>> orderBy, bool asNoTracking = true)
         {
 
             if (asNoTracking)
-                return  DbSet.AsNoTracking().OrderBy(orderBy).Where(expression);
+                return DbSet.AsNoTracking().OrderBy(orderBy).Where(expression);
 
 
 
-            return  DbSet.OrderBy(orderBy)
+            return DbSet.OrderBy(orderBy)
                                 .Where(expression);
 
+        }
+
+        public virtual IQueryable<T> Get(Expression<Func<T, bool>> expression = null,
+                                         Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+                                         int? take = null,
+                                         int? skip = null,
+                                         bool asNoTracking=true,
+                                         params Expression<Func<T,object>>[] includes)
+        {
+            var query = GetWithIncludes(asNoTracking,includes);
+
+            if (expression is not null)
+                query = query.Where(expression);
+
+            if (orderBy is not null)
+                query = orderBy(query);
+
+            if (skip is not null)
+                query = query.Skip(skip.Value);
+
+            if (take is not null)
+                query = query.Take(take.Value);
+
+            return query;
+
+        }
+
+        public virtual IQueryable<T> GetWithIncludes(bool asNoTracking = true, params Expression<Func<T, object>>[] includeProperties)
+        {
+
+            var result = DbSet.AsQueryable();
+
+            if (includeProperties.Any())
+                result = includeProperties.Aggregate(result, (current, includedProperty) => current.Include(includedProperty));
+
+            if (asNoTracking)
+                return result.AsNoTracking();
+            else
+                return result;
         }
 
         public virtual T GetById(int entityId, bool asNoTracking = true)
         {
             return asNoTracking
-                ?  DbSet.AsNoTracking().SingleOrDefault(entity => entity.Id == entityId)
-                :  DbSet.Find(entityId);
+                ? DbSet.AsNoTracking().SingleOrDefault(entity => entity.Id == entityId)
+                : DbSet.Find(entityId);
         }
+
+        #endregion
     }
 }
