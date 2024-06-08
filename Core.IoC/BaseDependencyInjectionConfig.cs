@@ -5,7 +5,7 @@ using Core.Domain.Interfaces.Base;
 using Core.Domain.Services;
 using Core.Infra.Data.Context;
 using Core.Infra.Data.Repositories;
-using Core.Service.Configuration.Swagger;
+//using Core.Service.Configuration.Swagger;
 using Core.Service.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +29,7 @@ namespace Core.IoC
             services.AddScoped<INotificadorService, NotificadorService>();
             services.AddScoped<IAppUser, AppUser>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+            //services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
 
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));

@@ -54,6 +54,15 @@ namespace Core.Domain.Interfaces
 
         IEnumerable<T> Get(Expression<Func<T, bool>> expression, Expression<Func<T, object>> orderBy, bool asNoTracking = true);
 
+        IQueryable<T> Get(Expression<Func<T, bool>> expression = null,
+                                         Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+                                         int? take = null,
+                                         int? skip = null,
+                                         bool asNoTracking = true,
+                                         params Expression<Func<T, object>>[] includes);
+
+        IQueryable<T> GetWithIncludes(bool asNoTracking = true, params Expression<Func<T, object>>[] includeProperties);
+
 
         T GetById(int entityId, bool asNoTracking = true);
     }

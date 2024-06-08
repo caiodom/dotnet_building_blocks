@@ -189,6 +189,7 @@ FakesAssemblies/
 
 deploy/
 /deploy
+.vs/
+cert/
+/cert
 
-
-.vs
